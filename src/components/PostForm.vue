@@ -3,16 +3,12 @@
         <h4>Add new post</h4>
         <my-input 
             v-model="post.title"
-            @input="post.title = $event.target.value"
             type="text" 
-            name="" 
             placeholder="Title"
             />
         <my-input 
             v-model="post.body"
-            @input="post.body = $event.target.value"
             type="text" 
-            name="" 
             placeholder="Description"
             />
         <my-button  
