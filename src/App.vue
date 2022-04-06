@@ -8,7 +8,7 @@
         <my-dialog v-model:show="dialogVisible">
             <post-form @create="createPost"/>
         </my-dialog>
-        <post-list :posts="posts"
+        <post-list :posts="sortedPosts"
                     @remove="removePost"
                     v-if="!isPostsLoading"/>
         <div v-else>Posts are loading...</div>
@@ -72,13 +72,15 @@ export default {
     mounted() {
         this.fetchPosts()
     },
-    watch: {
-        selectedSort(newValue) {
-            console.log(newValue)
-        },
-        dialogVisible(newValue) {
-            console.log(newValue)
+    computed: {
+        sortedPosts() {
+            return [...this.posts].sort((post1, post2) => {
+                return post1[this.selectedSort]?.localeCompare(post2[this.selectedSort]);
+            });
         }
+    },
+    watch: {
+
     }
 }
 </script>
