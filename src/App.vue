@@ -1,6 +1,10 @@
 <template>
     <div class="app">
         <h1>Posts page</h1>
+        <my-input
+            v-model="searchQuery"
+            placeholder="Search..."
+            />
         <div class="app__btns">
             <my-button @click="showDialog">Create new post</my-button>
             <my-select v-model="selectedSort" :options="sortOptions"></my-select>
@@ -8,10 +12,20 @@
         <my-dialog v-model:show="dialogVisible">
             <post-form @create="createPost"/>
         </my-dialog>
-        <post-list :posts="sortedPosts"
+        <post-list :posts="sortedAndSearcherPosts"
                     @remove="removePost"
                     v-if="!isPostsLoading"/>
         <div v-else>Posts are loading...</div>
+        <div class="page__wrapper">
+            <div
+                v-for="pageNumber in totalPages"
+                :key="pageNumber"
+                class="page"
+                :class="{
+                    'current__page': page === pageNumber
+                }"
+                @click="changePage(pageNumber)">{{pageNumber}}</div>
+        </div>
     </div>
 </template>
 
@@ -22,6 +36,7 @@ import MyButton from './components/UI/MyButton.vue'
 import MyDialog from './components/UI/MyDialog.vue'
 import axios from 'axios'
 import MySelect from './components/UI/MySelect.vue'
+import MyInput from './components/UI/MyInput.vue'
 
 export default {
     components: {
@@ -29,11 +44,15 @@ export default {
         PostList,
         MyDialog,
         MyButton,
-        MySelect
+        MySelect,
+        MyInput
     },
     data() {
         return {
-            posts: [], 
+            posts: [],
+            page: 1,
+            limit: 10,
+            totalPages: 0,
             modificatorValue: '',
             selectedSort: '',
             sortOptions: [
@@ -41,7 +60,8 @@ export default {
                 {value: 'body', name: 'Sort by body'},
             ],
             dialogVisible: false,
-            isPostsLoading: false   
+            isPostsLoading: false,
+            searchQuery: ''
         }
     },
     methods: {
@@ -55,13 +75,22 @@ export default {
         showDialog() {
             this.dialogVisible = true;
         },
+        changePage(pageNumber) {
+            this.page = pageNumber;
+        },
         async fetchPosts() {
             try {
                 this.isPostsLoading = true;
                 setTimeout(async () => {
-                    await axios.get('https://jsonplaceholder.typicode.com/posts?_limit=10').then(response => {
+                    await axios.get('https://jsonplaceholder.typicode.com/posts', {
+                        params: {
+                            _page: this.page,
+                            _limit: this.limit
+                        }
+                    }).then(response => {
                         this.posts = response.data;
                         this.isPostsLoading = false;
+                        this.totalPages = Math.ceil(response.headers['x-total-count'] / this.limit);
                     }); 
                 }, 1000)
             } catch (error) {
@@ -77,10 +106,15 @@ export default {
             return [...this.posts].sort((post1, post2) => {
                 return post1[this.selectedSort]?.localeCompare(post2[this.selectedSort]);
             });
+        },
+        sortedAndSearcherPosts() {
+            return this.sortedPosts.filter(post => post.title.toLowerCase().includes(this.searchQuery.toLowerCase()));
         }
     },
     watch: {
-
+        page() {
+            this.fetchPosts();
+        }
     }
 }
 </script>
@@ -99,5 +133,16 @@ export default {
     margin: 20px 0;
     display: flex;
     justify-content: space-between;
+}
+.page__wrapper {
+    display: flex;
+    margin-top: 15px;
+}
+.page {
+    border: 1px solid black;
+    padding: 10px;
+}
+.current__page {
+    border: 2px solid teal;
 }
 </style>

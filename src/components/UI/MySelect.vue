@@ -1,5 +1,5 @@
 <template>
-  <select v-model="modelValue" @change="changeOption">
+  <select v-model="modelValue" @change="changeOptions">
       <option disabled value="">Choose from list...</option>
       <option 
         v-for="option in options" 
